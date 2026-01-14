@@ -252,6 +252,12 @@ sudo ./kisa-hardening.sh -m U-XX
 | 로그 관리 | 0 | 2 | 0% |
 | **전체** | **1** | **67** | **1.5%** |
 
+**진행률 확인**:
+```bash
+# CSV 기반 자동 진행률 계산
+./scripts/check-progress.sh
+```
+
 자세한 항목 목록은 [kisa-items.csv](kisa-items.csv) 참조
 
 ## 🔧 트러블슈팅
@@ -321,3 +327,26 @@ LG CNS - Cloud Platform Team
 ---
 
 **주의**: 이 스크립트는 시스템의 중요한 보안 설정을 변경합니다. 반드시 테스트 환경에서 충분히 검증한 후 프로덕션에 적용하시기 바랍니다.
+
+## ⚠️ 골든 이미지 부적합 항목
+
+다음 항목들은 골든 이미지 단계에서 자동 적용하지 않습니다:
+
+### U-06: 사용자 계정 su 기능 제한
+- **이유**: 실제 사용자 계정이 없는 상태에서 wheel 그룹 설정 불가
+- **적용 시점**: VM 배포 후 사용자 생성 시
+- **적용 방법**: 
+  ```bash
+  # wheel 그룹 생성
+  sudo groupadd wheel
+  
+  # PAM 설정
+  echo "auth required pam_wheel.so use_uid" | sudo tee -a /etc/pam.d/su
+  
+  # su 권한 변경
+  sudo chgrp wheel /usr/bin/su
+  sudo chmod 4750 /usr/bin/su
+  
+  # 사용자 추가
+  sudo usermod -G wheel username
+  ```
