@@ -1,0 +1,68 @@
+대분류,점검항목,항목중요도,항목코드,카테고리코드
+1. 계정 관리,root 계정 원격 접속 제한,상,U-01,01-account-management
+1. 계정 관리,비밀번호 관리정책 설정,상,U-02,01-account-management
+1. 계정 관리,계정 잠금 임계값 설정,상,U-03,01-account-management
+1. 계정 관리,비밀번호 파일 보호,상,U-04,01-account-management
+1. 계정 관리,root 이외의 UID가 '0' 금지,상,U-05,01-account-management
+1. 계정 관리,사용자 계정 su 기능 제한,상,U-06,01-account-management
+1. 계정 관리,불필요한 계정 제거,하,U-07,01-account-management
+1. 계정 관리,관리자 그룹에 최소한의 계정 포함,중,U-08,01-account-management
+1. 계정 관리,계정이 존재하지 않는 GID 금지,하,U-09,01-account-management
+1. 계정 관리,동일한 UID 금지,중,U-10,01-account-management
+1. 계정 관리,사용자 Shell 점검,하,U-11,01-account-management
+1. 계정 관리,세션 종료 시간 설정,하,U-12,01-account-management
+1. 계정 관리,안전한 비밀번호 암호화 알고리즘 사용,중,U-13,01-account-management
+2. 파일 및 디렉토리 관리,root 홈 패스 디렉터리 권한 및 패스 설정,상,U-14,02-file-directory
+2. 파일 및 디렉토리 관리,파일 및 디렉터리 소유자 설정,상,U-15,02-file-directory
+2. 파일 및 디렉토리 관리,/etc/passwd 파일 소유자 및 권한 설정,상,U-16,02-file-directory
+2. 파일 및 디렉토리 관리,시스템 시작 스크립트 권한 설정,상,U-17,02-file-directory
+2. 파일 및 디렉토리 관리,/etc/shadow 파일 소유자 및 권한 설정,상,U-18,02-file-directory
+2. 파일 및 디렉토리 관리,/etc/hosts 파일 소유자 및 권한 설정,상,U-19,02-file-directory
+2. 파일 및 디렉토리 관리,/etc/(x)inetd.conf 파일 소유자 및 권한 설정,상,U-20,02-file-directory
+2. 파일 및 디렉토리 관리,/etc/(r)syslog.conf 파일 소유자 및 권한 설정,상,U-21,02-file-directory
+2. 파일 및 디렉토리 관리,/etc/services 파일 소유자 및 권한 설정,상,U-22,02-file-directory
+2. 파일 및 디렉토리 관리,SUID SGID Sticky bit 설정 파일 점검,상,U-23,02-file-directory
+2. 파일 및 디렉토리 관리,사용자 시스템 환경변수 파일 소유자 및 권한 설정,상,U-24,02-file-directory
+2. 파일 및 디렉토리 관리,world writable 파일 점검,상,U-25,02-file-directory
+2. 파일 및 디렉토리 관리,/dev에 존재하지 않는 device 파일 점검,상,U-26,02-file-directory
+2. 파일 및 디렉토리 관리,$HOME/.rhosts hosts.equiv 사용 금지,상,U-27,02-file-directory
+2. 파일 및 디렉토리 관리,접속 IP 및 포트 제한,상,U-28,02-file-directory
+2. 파일 및 디렉토리 관리,hosts.lpd 파일 소유자 및 권한 설정,하,U-29,02-file-directory
+2. 파일 및 디렉토리 관리,UMASK 설정 관리,중,U-30,02-file-directory
+2. 파일 및 디렉토리 관리,홈 디렉토리 소유자 및 권한 설정,중,U-31,02-file-directory
+2. 파일 및 디렉토리 관리,홈 디렉토리로 지정한 디렉토리의 존재 관리,중,U-32,02-file-directory
+2. 파일 및 디렉토리 관리,숨겨진 파일 및 디렉토리 검색 및 제거,하,U-33,02-file-directory
+3. 서비스 관리,Finger 서비스 비활성화,상,U-34,03-service-management
+3. 서비스 관리,공유 서비스에 대한 익명 접근 제한 설정,상,U-35,03-service-management
+3. 서비스 관리,r 계열 서비스 비활성화,상,U-36,03-service-management
+3. 서비스 관리,crontab 설정파일 권한 설정 미흡,상,U-37,03-service-management
+3. 서비스 관리,DoS 공격에 취약한 서비스 비활성화,상,U-38,03-service-management
+3. 서비스 관리,불필요한 NFS 서비스 비활성화,상,U-39,03-service-management
+3. 서비스 관리,NFS 접근 통제,상,U-40,03-service-management
+3. 서비스 관리,불필요한 automountd 제거,상,U-41,03-service-management
+3. 서비스 관리,불필요한 RPC 서비스 비활성화,상,U-42,03-service-management
+3. 서비스 관리,NIS NIS+ 점검,상,U-43,03-service-management
+3. 서비스 관리,tftp talk 서비스 비활성화,상,U-44,03-service-management
+3. 서비스 관리,메일 서비스 버전 점검,상,U-45,03-service-management
+3. 서비스 관리,일반 사용자의 메일 서비스 실행 방지,상,U-46,03-service-management
+3. 서비스 관리,스팸 메일 릴레이 제한,상,U-47,03-service-management
+3. 서비스 관리,expn vrfy 명령어 제한,중,U-48,03-service-management
+3. 서비스 관리,DNS 보안 버전 패치,상,U-49,03-service-management
+3. 서비스 관리,DNS Zone Transfer 설정,상,U-50,03-service-management
+3. 서비스 관리,DNS 서비스의 취약한 동적 업데이트 설정 금지,중,U-51,03-service-management
+3. 서비스 관리,Telnet 서비스 비활성화,중,U-52,03-service-management
+3. 서비스 관리,FTP 서비스 정보 노출 제한,하,U-53,03-service-management
+3. 서비스 관리,암호화되지 않는 FTP 서비스 비활성화,중,U-54,03-service-management
+3. 서비스 관리,FTP 계정 Shell 제한,중,U-55,03-service-management
+3. 서비스 관리,FTP 서비스 접근 제어 설정,하,U-56,03-service-management
+3. 서비스 관리,Ftpusers 파일 설정,중,U-57,03-service-management
+3. 서비스 관리,불필요한 SNMP 서비스 구동 점검,중,U-58,03-service-management
+3. 서비스 관리,안전한 SNMP 버전 사용,상,U-59,03-service-management
+3. 서비스 관리,SNMP Community String 복잡성 설정,중,U-60,03-service-management
+3. 서비스 관리,SNMP Access Control 설정,상,U-61,03-service-management
+3. 서비스 관리,로그인 시 경고 메시지 설정,하,U-62,03-service-management
+3. 서비스 관리,sudo 명령어 접근 관리,중,U-63,03-service-management
+4. 패치 관리,주기적 보안 패치 및 벤더 권고사항 적용,상,U-64,04-patch-management
+4. 패치 관리,NTP 및 시각 동기화 설정,중,U-65,04-patch-management
+4. 패치 관리,정책에 따른 시스템 로깅 설정,중,U-66,05-log-management
+4. 패치 관리,로그 디렉터리 소유자 및 권한 설정,중,U-67,05-log-management
