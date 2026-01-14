@@ -392,3 +392,56 @@ LG CNS - Cloud Platform Team
   # 불필요한 그룹 제거
   sudo groupdel groupname
   ```
+
+### U-14: PATH 환경변수 설정
+- **이유**: 사용자별 PATH는 사용자 생성 후 설정, 환경마다 필요 경로 상이
+- **적용 시점**: VM 배포 후 사용자별 설정
+- **적용 방법**: 
+  ```bash
+  # 전역 설정 (/etc/profile)
+  export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  
+  # 사용자별 설정 (~/.bashrc)
+  PATH=$PATH:$HOME/bin
+  ```
+
+### U-15: 소유자 없는 파일 정리
+- **이유**: 골든 이미지에는 해당 파일이 거의 없음, 배포 후 발생하는 문제
+- **적용 시점**: VM 운영 중 정기 점검
+- **적용 방법**: 
+  ```bash
+  # 소유자 없는 파일 찾기
+  find / \( -nouser -o -nogroup \) -xdev -ls 2>/dev/null
+  
+  # 소유자 변경 또는 삭제
+  sudo chown username:group filename
+  sudo rm filename
+  ```
+
+### U-24: 사용자 홈 디렉터리 환경변수 파일 권한
+- **이유**: 사용자 홈 디렉터리가 아직 없음
+- **적용 시점**: VM 배포 후 사용자 생성 시
+- **적용 방법**: 
+  ```bash
+  # 환경변수 파일 권한 설정
+  chmod 644 ~/.bashrc ~/.bash_profile ~/.profile
+  
+  # 민감 파일 권한 강화
+  chmod 600 ~/.netrc ~/.ssh/config
+  ```
+
+
+### U-25: world writable 파일 점검
+- **이유**: /tmp 등 일부 디렉토리는 world writable이 필요, 파일 삭제는 위험
+- **적용 시점**: VM 운영 중 정기 점검
+- **적용 방법**: 
+  ```bash
+  # world writable 파일 찾기
+  find / -type f -perm -2 -ls 2>/dev/null
+  
+  # 일반 사용자 쓰기 권한 제거
+  sudo chmod o-w filename
+  
+  # 불필요한 파일 삭제
+  sudo rm filename
+  ```
