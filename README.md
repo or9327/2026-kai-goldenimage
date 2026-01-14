@@ -350,3 +350,45 @@ LG CNS - Cloud Platform Team
   # 사용자 추가
   sudo usermod -G wheel username
   ```
+
+### U-07: 불필요한 계정 제거
+- **이유**: 환경마다 "불필요한 계정"의 정의가 다름
+- **적용 시점**: VM 배포 후 보안 감사 시
+- **적용 방법**: 
+  ```bash
+  # 계정 목록 확인
+  cat /etc/passwd
+  
+  # 최근 로그인 확인
+  last
+  
+  # 불필요한 계정 제거
+  sudo userdel username
+  ```
+
+### U-08: 관리자 그룹 최소화
+- **이유**: root 그룹에 포함할 사용자가 골든 이미지 단계에서는 없음
+- **적용 시점**: VM 배포 후 사용자 생성 시
+- **적용 방법**: 
+  ```bash
+  # root 그룹 멤버 확인
+  grep "^root:" /etc/group
+  
+  # 불필요한 사용자 제거
+  sudo gpasswd -d username root
+  ```
+
+### U-09: 불필요한 그룹 제거
+- **이유**: 어떤 그룹이 "불필요"한지 환경별로 판단 필요
+- **적용 시점**: VM 배포 후 보안 감사 시
+- **적용 방법**: 
+  ```bash
+  # 그룹 목록 확인
+  cat /etc/group
+  
+  # 그룹에 속한 파일 확인
+  find / -group groupname 2>/dev/null
+  
+  # 불필요한 그룹 제거
+  sudo groupdel groupname
+  ```
