@@ -7,8 +7,7 @@ Ubuntu 24.04 환경에서 **2026 주요정보통신기반시설 기술적 취약
 ```
 kisa-hardening/
 ├── README.md                      # 프로젝트 문서
-├── KISA-ITEMS.md                  # 전체 항목 목록 (Markdown)
-├── kisa-items.csv                 # 전체 항목 목록 (CSV)
+├── kisa-items.csv                 # 전체 항목 목록 (67개)
 ├── kisa-hardening.sh              # 메인 실행 스크립트
 ├── config/
 │   ├── settings.conf              # 전역 설정
@@ -68,9 +67,9 @@ kisa-hardening/
 - JSON 형식 결과 저장
 
 ### 5. CSV 기반 항목 관리
-- `kisa-items.csv`에서 전체 항목 관리
+- `kisa-items.csv`에서 전체 67개 항목 관리
 - `generate-modules-conf.sh`로 자동 config 생성
-- Markdown 문서로 진행률 추적
+- CSV 파일에서 직접 진행률 확인
 
 ## 🚀 빠른 시작
 
@@ -84,6 +83,7 @@ kisa-hardening/
 ```bash
 # 저장소 클론
 git clone <repository-url>
+cd kisa-hardening
 
 # 실행 권한 부여
 chmod +x kisa-hardening.sh
@@ -252,7 +252,7 @@ sudo ./kisa-hardening.sh -m U-XX
 | 로그 관리 | 0 | 2 | 0% |
 | **전체** | **1** | **67** | **1.5%** |
 
-자세한 항목 목록은 [KISA-ITEMS.md](KISA-ITEMS.md) 참조
+자세한 항목 목록은 [kisa-items.csv](kisa-items.csv) 참조
 
 ## 🔧 트러블슈팅
 

@@ -7,7 +7,16 @@ log_message() {
     local message=$2
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     
-    echo "[$timestamp] [$level] $message" | tee -a "$LOG_FILE"
+    # LOG_FILE이 설정되어 있고 디렉토리가 존재하는 경우에만 파일에 기록
+    if [ -n "$LOG_FILE" ]; then
+        local log_dir=$(dirname "$LOG_FILE")
+        if [ ! -d "$log_dir" ]; then
+            mkdir -p "$log_dir" 2>/dev/null || true
+        fi
+        echo "[$timestamp] [$level] $message" | tee -a "$LOG_FILE" 2>/dev/null || echo "[$timestamp] [$level] $message"
+    else
+        echo "[$timestamp] [$level] $message"
+    fi
 }
 
 log_info() {
