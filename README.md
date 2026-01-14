@@ -445,3 +445,61 @@ LG CNS - Cloud Platform Team
   # 불필요한 파일 삭제
   sudo rm filename
   ```
+
+  ### U-28: 접근제어 설정 (TCP Wrapper/Firewall)
+- **이유**: 허용할 IP 주소를 사전에 알 수 없음, 환경별로 방화벽 정책 상이
+- **적용 시점**: VM 배포 후 네트워크 정책 수립 시
+- **적용 방법**: 
+  ```bash
+  # TCP Wrapper (/etc/hosts.allow, /etc/hosts.deny)
+  echo "ALL:ALL" | sudo tee /etc/hosts.deny
+  echo "sshd: 192.168.1.0/24" | sudo tee -a /etc/hosts.allow
+  
+  # UFW (Ubuntu 기본)
+  sudo ufw allow from 192.168.1.0/24 to any port 22
+  sudo ufw enable
+  
+  # Firewalld
+  sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="22" accept'
+  sudo firewall-cmd --reload
+  ```
+
+### U-31: 사용자 홈 디렉토리 권한 설정
+- **이유**: 사용자 홈 디렉토리가 아직 없음
+- **적용 시점**: VM 배포 후 사용자 생성 시
+- **적용 방법**: 
+  ```bash
+  # 사용자 홈 디렉토리 권한 확인
+  ls -ald /home/*
+  
+  # 소유자 변경 및 other write 제거
+  sudo chown username:username /home/username
+  sudo chmod 755 /home/username
+  ```
+
+### U-32: 홈 디렉토리 존재 여부 확인
+- **이유**: 사용자별 홈 디렉토리 설정, 사용자 생성 후 점검 필요
+- **적용 시점**: VM 배포 후 사용자 감사 시
+- **적용 방법**: 
+  ```bash
+  # 홈 디렉토리 없는 계정 확인
+  awk -F: '$6 !~ /^\/home\// {print $1, $6}' /etc/passwd
+  
+  # 불필요한 계정 삭제 또는 홈 디렉토리 생성
+  sudo userdel username
+  # 또는
+  sudo usermod -d /home/username username
+  sudo mkdir -p /home/username
+  ```
+
+### U-33: 숨겨진 파일 및 디렉토리 검사
+- **이유**: 어떤 숨겨진 파일이 "불필요"한지 판단 어려움
+- **적용 시점**: VM 운영 중 정기 보안 점검
+- **적용 방법**: 
+  ```bash
+  # 숨겨진 파일 찾기
+  find /home -type f -name ".*" -ls 2>/dev/null
+  
+  # 의심스러운 파일 확인 및 삭제
+  sudo rm -i /path/to/suspicious/file
+  ```
