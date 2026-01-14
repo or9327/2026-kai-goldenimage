@@ -23,6 +23,13 @@ BACKUP_DIR="${BACKUP_BASE_DIR}/${TIMESTAMP}"
 LOG_FILE="${LOG_BASE_DIR}/kisa-hardening-${TIMESTAMP}.log"
 REPORT_FILE="${REPORT_BASE_DIR}/kisa-report-${TIMESTAMP}.html"
 
+# 서브 스크립트(모듈)에서 사용할 수 있도록 export
+export BACKUP_DIR
+export LOG_FILE
+export LOG_BASE_DIR
+export BACKUP_BASE_DIR
+export SCRIPT_DIR
+
 # 카운터 초기화
 MODULE_SUCCESS_COUNT=0
 MODULE_FAIL_COUNT=0
@@ -89,9 +96,9 @@ list_modules() {
             
             echo "[$category_name] $category_title"
             
-            for module in "$category_dir"/*.sh 2>/dev/null; do
-                if [ -f "$module" ]; then
-                    module_name=$(basename "$module" .sh)
+            for module in "$category_dir"/*.sh; do
+                [ -f "$module" ] || continue
+                module_name=$(basename "$module" .sh)
                     module_desc=$(get_module_description "$module")
                     
                     # 모듈 활성화 상태 확인
@@ -102,7 +109,6 @@ list_modules() {
                     fi
                     
                     echo "  $status $module_name - $module_desc"
-                fi
             done
             echo ""
         fi
@@ -210,8 +216,15 @@ execute_category() {
     
     log_section "카테고리 실행: $category"
     
+    # 모듈이 있는지 확인
+    local module_count=$(find "$category_dir" -maxdepth 1 -name "*.sh" -type f | wc -l)
+    if [ "$module_count" -eq 0 ]; then
+        log_warning "카테고리에 모듈이 없습니다: $category"
+        return 0
+    fi
+    
     # 모듈 정렬 후 실행
-    for module in $(ls "$category_dir"/*.sh 2>/dev/null | sort); do
+    find "$category_dir" -maxdepth 1 -name "*.sh" -type f | sort | while read -r module; do
         execute_module "$module"
     done
 }
@@ -221,7 +234,8 @@ execute_all() {
     log_section "전체 KISA 보안 가이드 적용 시작"
     
     # 카테고리 순서대로 실행
-    for category_dir in $(ls -d "${SCRIPT_DIR}/modules"/*/ 2>/dev/null | sort); do
+    for category_dir in "${SCRIPT_DIR}/modules"/*/ ; do
+        [ -d "$category_dir" ] || continue
         category=$(basename "$category_dir")
         execute_category "$category"
     done

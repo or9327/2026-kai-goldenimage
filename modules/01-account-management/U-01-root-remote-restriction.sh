@@ -30,7 +30,7 @@ check_current_status() {
     log_info "현재 상태 확인 중..."
     
     # Telnet 서비스 확인
-    if systemctl list-unit-files | grep -q telnet 2>/dev/null; then
+    if systemctl list-unit-files 2>/dev/null | grep -q telnet; then
         log_warning "Telnet 서비스 발견"
         TELNET_FOUND=true
     else
@@ -119,9 +119,21 @@ apply_hardening() {
         return 1
     fi
     
-    # SSH 재시작
+    # SSH 재시작 (Ubuntu는 ssh.service 사용)
     log_info "SSH 서비스 재시작 중..."
-    systemctl restart sshd
+    
+    # ssh 또는 sshd 중 활성화된 서비스 재시작
+    if systemctl is-active --quiet ssh; then
+        systemctl restart ssh
+    elif systemctl is-active --quiet sshd; then
+        systemctl restart sshd
+    else
+        # 서비스가 비활성 상태여도 재시작 시도
+        systemctl restart ssh 2>/dev/null || systemctl restart sshd 2>/dev/null || {
+            log_error "SSH 서비스를 재시작할 수 없습니다"
+            return 1
+        }
+    fi
     
     log_success "설정 적용 완료"
 }
@@ -142,7 +154,7 @@ validate_settings() {
     fi
     
     # Telnet 확인
-    if ! systemctl is-active telnetd &>/dev/null && ! dpkg -l | grep -q telnetd 2>/dev/null; then
+    if ! systemctl is-active telnetd &>/dev/null && ! dpkg -l 2>/dev/null | grep -q telnetd; then
         log_success "✓ Telnet 서비스 제거됨"
     else
         log_error "✗ Telnet 서비스 여전히 존재"
@@ -173,6 +185,13 @@ main() {
     if ! apply_hardening; then
         log_error "설정 적용 실패"
         exit 1
+    fi
+    
+    # 드라이런 모드에서는 검증 스킵
+    if [ "${DRY_RUN_MODE:-false}" = true ]; then
+        log_info "[DRY RUN] 검증 단계 생략"
+        log_success "[$MODULE_ID] $MODULE_NAME - 완료 (드라이런)"
+        exit 0
     fi
     
     # 설정 검증
