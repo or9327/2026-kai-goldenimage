@@ -11,7 +11,17 @@ generate_html_report() {
     # 보고서 디렉토리 생성
     mkdir -p "$(dirname "$report_file")"
     
-    cat > "$report_file" << 'EOF'
+    # 현재 시간 및 시스템 정보 미리 계산
+    local current_time=$(date '+%Y-%m-%d %H:%M:%S')
+    local current_host=$(hostname)
+    local os_version=$(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d'"' -f2 || echo "Unknown")
+    
+    # 모듈 실행 결과 카운터
+    local success_count=${MODULE_SUCCESS_COUNT:-0}
+    local fail_count=${MODULE_FAIL_COUNT:-0}
+    local skip_count=${MODULE_SKIP_COUNT:-0}
+    
+    cat > "$report_file" << EOF
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -120,23 +130,23 @@ generate_html_report() {
 <body>
     <div class="container">
         <h1>🔒 KISA 보안 가이드 점검 보고서</h1>
-        <p><strong>생성 시간:</strong> $(date '+%Y-%m-%d %H:%M:%S')</p>
-        <p><strong>호스트명:</strong> $(hostname)</p>
-        <p><strong>OS 버전:</strong> $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d'"' -f2 || echo "Unknown")</p>
+        <p><strong>생성 시간:</strong> $current_time</p>
+        <p><strong>호스트명:</strong> $current_host</p>
+        <p><strong>OS 버전:</strong> $os_version</p>
         
         <h2>📊 실행 요약</h2>
         <div class="summary">
             <div class="summary-box success">
                 <h3>성공</h3>
-                <div class="number">${MODULE_SUCCESS_COUNT:-0}</div>
+                <div class="number">$success_count</div>
             </div>
             <div class="summary-box error">
                 <h3>실패</h3>
-                <div class="number">${MODULE_FAIL_COUNT:-0}</div>
+                <div class="number">$fail_count</div>
             </div>
             <div class="summary-box warning">
                 <h3>건너뜀</h3>
-                <div class="number">${MODULE_SKIP_COUNT:-0}</div>
+                <div class="number">$skip_count</div>
             </div>
         </div>
         
@@ -203,19 +213,28 @@ generate_json_report() {
     # 보고서 디렉토리 생성
     mkdir -p "$(dirname "$report_file")"
     
+    # 변수 미리 계산
+    local generated_time=$(date -Iseconds)
+    local current_host=$(hostname)
+    local os_version=$(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d'"' -f2 || echo 'Unknown')
+    local success_count=${MODULE_SUCCESS_COUNT:-0}
+    local fail_count=${MODULE_FAIL_COUNT:-0}
+    local skip_count=${MODULE_SKIP_COUNT:-0}
+    local total_count=$((success_count + fail_count + skip_count))
+    
     cat > "$report_file" << EOF
 {
   "report_metadata": {
-    "generated_at": "$(date -Iseconds)",
-    "hostname": "$(hostname)",
-    "os_version": "$(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d'"' -f2 || echo 'Unknown')",
+    "generated_at": "$generated_time",
+    "hostname": "$current_host",
+    "os_version": "$os_version",
     "script_version": "1.0"
   },
   "summary": {
-    "total_modules": $((MODULE_SUCCESS_COUNT + MODULE_FAIL_COUNT + MODULE_SKIP_COUNT)),
-    "success_count": ${MODULE_SUCCESS_COUNT:-0},
-    "failed_count": ${MODULE_FAIL_COUNT:-0},
-    "skip_count": ${MODULE_SKIP_COUNT:-0}
+    "total_modules": $total_count,
+    "success_count": $success_count,
+    "failed_count": $fail_count,
+    "skip_count": $skip_count
   },
   "modules": [
 EOF

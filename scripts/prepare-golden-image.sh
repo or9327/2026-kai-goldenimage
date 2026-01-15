@@ -99,12 +99,15 @@ main() {
     # 12. 보안 정리 (권장)
     clean_security_artifacts
     
-    # 13. 디스크 공간 제로화 (선택적)
+    # 13. KISA 하드닝 소스 코드 정리 (권장)
+    clean_hardening_source
+    
+    # 14. 디스크 공간 제로화 (선택적)
     if confirm "디스크 공간을 제로화하시겠습니까? (시간이 오래 걸림)"; then
         zero_free_space
     fi
     
-    # 14. 최종 확인
+    # 15. 최종 확인
     show_summary
     
     echo
@@ -355,23 +358,71 @@ clean_gcp_specific() {
 
 # 12. 보안 정리
 clean_security_artifacts() {
-    log_info "[12/13] 보안 관련 정리 중..."
+    log_info "[12/14] 보안 관련 정리 중..."
     
     # 임시 sudoers 파일 (테스트 계정 등)
     # 주의: 실제 사용 중인 sudoers 파일은 삭제하지 않음
     
     # 하드닝 스크립트 백업 정리 (선택적)
-    if confirm "하드닝 스크립트 백업을 삭제하시겠습니까?"; then
-        rm -rf /var/backups/kisa-hardening 2>/dev/null || true
-        log_success "하드닝 스크립트 백업 삭제됨"
+    if [ -d /root/kisa-backup ]; then
+        if confirm "하드닝 백업 디렉토리를 삭제하시겠습니까? (/root/kisa-backup)"; then
+            rm -rf /root/kisa-backup 2>/dev/null || true
+            log_success "하드닝 백업 삭제됨"
+        fi
+    fi
+    
+    # KISA 하드닝 로그 파일 정리
+    if [ -d /var/log/kisa-hardening ]; then
+        if confirm "KISA 하드닝 로그를 삭제하시겠습니까? (/var/log/kisa-hardening)"; then
+            rm -rf /var/log/kisa-hardening 2>/dev/null || true
+            log_success "KISA 하드닝 로그 삭제됨"
+        fi
     fi
     
     log_success "보안 정리 완료"
 }
 
-# 13. 디스크 공간 제로화
+# 13. KISA 하드닝 소스 코드 정리
+clean_hardening_source() {
+    log_info "[13/14] KISA 하드닝 소스 코드 정리 중..."
+    
+    # Git 저장소 찾기
+    local git_dirs=(
+        "/root/2026-kai-goldenimage"
+        "$HOME/2026-kai-goldenimage"
+        "/opt/2026-kai-goldenimage"
+    )
+    
+    local found=false
+    for git_dir in "${git_dirs[@]}"; do
+        if [ -d "$git_dir" ]; then
+            log_warning "발견: $git_dir"
+            if confirm "KISA 하드닝 소스 코드를 삭제하시겠습니까? ($git_dir)"; then
+                rm -rf "$git_dir" 2>/dev/null || true
+                log_success "소스 코드 삭제됨: $git_dir"
+                found=true
+            fi
+        fi
+    done
+    
+    if [ "$found" = false ]; then
+        log_info "KISA 하드닝 소스 코드를 찾을 수 없습니다"
+    fi
+    
+    # 추가 위치 확인
+    if [ -d /root/kisa-hardening ]; then
+        if confirm "KISA 하드닝 디렉토리를 삭제하시겠습니까? (/root/kisa-hardening)"; then
+            rm -rf /root/kisa-hardening 2>/dev/null || true
+            log_success "소스 코드 삭제됨: /root/kisa-hardening"
+        fi
+    fi
+    
+    log_success "소스 코드 정리 완료"
+}
+
+# 14. 디스크 공간 제로화
 zero_free_space() {
-    log_info "[13/13] 디스크 공간 제로화 중 (시간이 오래 걸릴 수 있습니다)..."
+    log_info "[14/14] 디스크 공간 제로화 중 (시간이 오래 걸릴 수 있습니다)..."
     
     log_warning "이 작업은 디스크 I/O를 많이 사용합니다"
     
