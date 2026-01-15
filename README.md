@@ -28,6 +28,7 @@ kisa-hardening/
 │   └── 05-log-management/         # 로그 관리 (2개 항목)
 ├── scripts/
 │   └── generate-modules-conf.sh   # modules.conf 자동 생성 스크립트
+│   └── prepare-golden-image.sh    # 골든 이미지 준비 스크립트
 ├── checks/
 │   ├── pre-check.sh               # 사전 점검
 │   └── post-check.sh              # 사후 검증
@@ -239,27 +240,6 @@ sudo ./kisa-hardening.sh -d -m U-XX
 sudo ./kisa-hardening.sh -m U-XX
 ```
 
-## 📊 진행 상황
-
-### 현재 구현 현황
-
-| 카테고리 | 완료 | 전체 | 진행률 |
-|---------|-----|------|-------|
-| 계정 관리 | 1 | 13 | 7.7% |
-| 파일 및 디렉토리 | 0 | 20 | 0% |
-| 서비스 관리 | 0 | 30 | 0% |
-| 패치 관리 | 0 | 2 | 0% |
-| 로그 관리 | 0 | 2 | 0% |
-| **전체** | **1** | **67** | **1.5%** |
-
-**진행률 확인**:
-```bash
-# CSV 기반 자동 진행률 계산
-./scripts/check-progress.sh
-```
-
-자세한 항목 목록은 [kisa-items.csv](kisa-items.csv) 참조
-
 ## 🔧 트러블슈팅
 
 ### 문제: SSH 접속 불가
@@ -430,7 +410,6 @@ LG CNS - Cloud Platform Team
   chmod 600 ~/.netrc ~/.ssh/config
   ```
 
-
 ### U-25: world writable 파일 점검
 - **이유**: /tmp 등 일부 디렉토리는 world writable이 필요, 파일 삭제는 위험
 - **적용 시점**: VM 운영 중 정기 점검
@@ -560,3 +539,146 @@ LG CNS - Cloud Platform Team
   uname -r
   hostnamectl
   ```
+
+---
+
+## 골든 이미지 생성 가이드
+
+### 개요
+KISA 보안 가이드를 모두 적용한 후, 골든 이미지를 생성하기 전에 시스템을 정리하고 초기화해야 합니다.
+
+### 골든 이미지 준비 스크립트
+
+`scripts/prepare-golden-image.sh` 스크립트는 골든 이미지 생성 전 필수 작업을 자동화합니다.
+
+```bash
+sudo ./scripts/prepare-golden-image.sh
+```
+
+### 수행 작업
+
+#### 필수 작업
+1. **타임존 설정**: Asia/Seoul (KST)
+2. **SSH 호스트 키 삭제**: 각 VM이 고유한 키를 생성하도록
+3. **Machine ID 초기화**: 각 VM이 고유한 ID를 가지도록
+4. **네트워크 설정 초기화**: cloud-init, netplan 등
+5. **사용자 기록 삭제**: bash_history, known_hosts 등
+6. **로그 파일 정리**: /var/log 모든 로그
+7. **임시 파일 정리**: /tmp, /var/tmp 등
+
+#### 권장 작업
+8. **패키지 캐시 정리**: apt/yum 캐시 삭제
+9. **시스템 저널 정리**: journalctl 로그 삭제
+10. **Cloud-init 상태 초기화**: 새 VM에서 재실행되도록
+11. **GCP 특화 정리**: Ops Agent, Guest Agent 상태
+12. **보안 정리**: 하드닝 백업 등
+13. **디스크 공간 제로화** (선택적): 이미지 크기 최적화
+
+### 사용법
+
+#### 1. KISA 보안 가이드 적용
+```bash
+# 모든 모듈 적용
+sudo ./kisa-hardening.sh --all
+
+# 또는 카테고리별 적용
+sudo ./kisa-hardening.sh -c 01-account-management
+sudo ./kisa-hardening.sh -c 02-file-directory-management
+sudo ./kisa-hardening.sh -c 03-service-management
+sudo ./kisa-hardening.sh -c 04-patch-management
+```
+
+#### 2. 골든 이미지 준비
+```bash
+# 스크립트 실행
+sudo ./scripts/prepare-golden-image.sh
+
+# 확인 프롬프트가 나타나면 'y' 입력
+```
+
+#### 3. 시스템 종료
+```bash
+sudo shutdown -h now
+```
+
+#### 4. GCP 이미지 생성
+
+**GCP 콘솔 방법:**
+1. Compute Engine > 이미지
+2. 이미지 만들기
+3. 소스: 디스크 선택
+4. 이미지 생성
+
+**gcloud CLI 방법:**
+```bash
+gcloud compute images create kisa-hardened-ubuntu-2404 \
+  --source-disk=SOURCE_DISK_NAME \
+  --source-disk-zone=ZONE \
+  --family=kisa-hardened-ubuntu \
+  --description="KISA hardened Ubuntu 24.04 golden image"
+```
+
+### 골든 이미지 검증
+
+새 이미지로 테스트 인스턴스를 생성하여 검증:
+
+```bash
+# 1. SSH 연결 확인
+ssh user@NEW_INSTANCE_IP
+
+# 2. SSH 호스트 키 확인 (새로 생성되었는지)
+ls -l /etc/ssh/ssh_host_*
+
+# 3. Machine ID 확인 (고유한지)
+cat /etc/machine-id
+
+# 4. 타임존 확인
+timedatectl
+
+# 5. 보안 설정 확인
+sudo ./kisa-hardening.sh --validate
+```
+
+### 주의사항
+
+⚠️ **경고**: `prepare-golden-image.sh`는 시스템을 초기화합니다!
+
+- **골든 이미지 생성 직전에만** 실행하세요
+- **운영 중인 서버에서는 절대 실행하지 마세요**
+- 실행 전 중요한 데이터를 백업하세요
+- 스크립트 실행 후에는 시스템을 재부팅하지 말고 바로 종료하세요
+
+### 골든 이미지 베스트 프랙티스
+
+1. **버전 관리**
+   - 이미지 이름에 날짜 포함: `kisa-ubuntu-2404-20260115`
+   - 변경 사항을 문서화
+   - 이전 이미지 보관 (롤백용)
+
+2. **테스트**
+   - 새 이미지로 테스트 인스턴스 생성
+   - 모든 보안 설정 검증
+   - 애플리케이션 동작 확인
+
+3. **자동화**
+   - Packer를 사용한 이미지 빌드 자동화 고려
+   - CI/CD 파이프라인 통합
+
+4. **정기 업데이트**
+   - 월 1회 보안 패치 적용 후 이미지 재생성
+   - KISA 가이드 업데이트 반영
+
+### 문제 해결
+
+#### SSH 연결 불가
+- SSH 호스트 키가 재생성되었는지 확인
+- cloud-init이 정상 동작하는지 확인
+- 방화벽 규칙 확인
+
+#### Machine ID 중복
+- `/etc/machine-id`가 비어있는지 확인
+- cloud-init이 새 ID를 생성했는지 확인
+
+#### 네트워크 설정 문제
+- cloud-init 로그 확인: `/var/log/cloud-init.log`
+- DHCP 설정 확인
