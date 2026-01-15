@@ -64,5 +64,5 @@
 3. 서비스 관리,sudo 명령어 접근 관리,중,U-63,03-service-management
 4. 패치 관리,주기적 보안 패치 및 벤더 권고사항 적용,상,U-64,04-patch-management
 4. 패치 관리,NTP 및 시각 동기화 설정,중,U-65,04-patch-management
-4. 패치 관리,정책에 따른 시스템 로깅 설정,중,U-66,05-log-management
-4. 패치 관리,로그 디렉터리 소유자 및 권한 설정,중,U-67,05-log-management
+4. 패치 관리,정책에 따른 시스템 로깅 설정,중,U-66,04-patch-management
+4. 패치 관리,로그 디렉터리 소유자 및 권한 설정,중,U-67,04-patch-management

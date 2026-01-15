@@ -543,3 +543,20 @@ LG CNS - Cloud Platform Team
   
   sudo systemctl restart snmpd
   ```
+
+### U-64: 최신 OS 및 커널 패치
+- **이유**: 패치는 지속적인 운영 작업, 골든 이미지 생성 시점의 최신 버전 사용
+- **적용 시점**: 골든 이미지 생성 시 및 운영 중 지속적으로
+- **적용 방법**: 
+  ```bash
+  # 골든 이미지 생성 시
+  sudo apt update && sudo apt upgrade -y
+  
+  # 운영 중 자동 업데이트 설정
+  sudo apt install unattended-upgrades
+  sudo dpkg-reconfigure -plow unattended-upgrades
+  
+  # 커널 버전 확인
+  uname -r
+  hostnamectl
+  ```
