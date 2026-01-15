@@ -226,15 +226,9 @@ validate_settings() {
     local validation_failed=false
     local validated_count=0
     
-    # 주요 파일만 검증
-    local critical_files=(
-        "/etc/passwd:root:root:644"
-        "/etc/shadow:root:shadow:640"
-        "/etc/hosts:root:root:644"
-    )
-    
-    for entry in "${critical_files[@]}"; do
-        IFS=':' read -r filepath owner group perms <<< "$entry"
+    # FILE_PERMISSIONS 배열의 파일들을 검증
+    for entry in "${FILE_PERMISSIONS[@]}"; do
+        IFS=':' read -r filepath owner group perms module_id desc <<< "$entry"
         
         if [ ! -f "$filepath" ]; then
             continue
@@ -244,6 +238,7 @@ validate_settings() {
         local current_owner=$(stat -c "%U" "$filepath")
         local current_group=$(stat -c "%G" "$filepath")
         
+        # 권한과 소유자만 확인 (그룹은 유연하게)
         if [ "$current_perms" = "$perms" ] && [ "$current_owner" = "$owner" ]; then
             log_success "✓ $filepath: $current_owner:$current_group $current_perms"
             validated_count=$((validated_count + 1))
@@ -253,11 +248,31 @@ validate_settings() {
         fi
     done
     
+    # 디렉토리 검증
+    for entry in "${DIR_PERMISSIONS[@]}"; do
+        IFS=':' read -r dirpath owner group perms module_id desc <<< "$entry"
+        
+        if [ ! -d "$dirpath" ]; then
+            continue
+        fi
+        
+        local current_perms=$(stat -c "%a" "$dirpath")
+        local current_owner=$(stat -c "%U" "$dirpath")
+        
+        if [ "$current_perms" = "$perms" ] && [ "$current_owner" = "$owner" ]; then
+            log_success "✓ $dirpath/: $current_owner $current_perms"
+            validated_count=$((validated_count + 1))
+        else
+            log_error "✗ $dirpath/: $current_owner $current_perms (예상: $owner $perms)"
+            validation_failed=true
+        fi
+    done
+    
     if [ "$validation_failed" = true ]; then
         return 1
     fi
     
-    log_info "검증 완료: $validated_count개 핵심 파일"
+    log_info "검증 완료: $validated_count개 파일/디렉토리"
     return 0
 }
 
