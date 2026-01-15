@@ -29,19 +29,21 @@ fi
 # 형식: "파일경로:소유자:그룹:권한:모듈ID:설명"
 declare -a FILE_PERMISSIONS=(
     "/etc/passwd:root:root:644:U-16:패스워드 파일"
-    "/etc/shadow:root:shadow:640:U-18:쉐도우 패스워드 파일"
+    "/etc/shadow:root:root:400:U-18:쉐도우 패스워드 파일"
     "/etc/hosts:root:root:644:U-19:호스트 파일"
     "/etc/rsyslog.conf:root:root:640:U-21:로그 설정파일"
     "/etc/syslog.conf:root:root:640:U-21:로그 설정파일(구버전)"
     "/etc/services:root:root:644:U-22:서비스 파일"
     "/etc/inetd.conf:root:root:600:U-20:inetd 설정파일"
     "/etc/xinetd.conf:root:root:600:U-20:xinetd 설정파일"
-    "/etc/systemd/system.conf:root:root:644:U-20:systemd 설정파일"
+    "/etc/systemd/system.conf:root:root:600:U-20:systemd 설정파일"
 )
 
 # 디렉토리 권한 설정 목록
+# 참고: KISA는 chmod -R 600을 권장하지만, 디렉토리는 실행 권한이 필요하므로 750 사용
 declare -a DIR_PERMISSIONS=(
-    "/etc/xinetd.d:root:root:755:U-20:xinetd 서비스 디렉토리"
+    "/etc/xinetd.d:root:root:750:U-20:xinetd 서비스 디렉토리"
+    "/etc/systemd:root:root:750:U-20:systemd 서비스 디렉토리"
 )
 
 # 1. 현재 상태 확인
@@ -182,7 +184,14 @@ apply_hardening() {
         if [ "$dirpath" = "/etc/xinetd.d" ]; then
             find "$dirpath" -type f -exec chown root:root {} \; 2>/dev/null
             find "$dirpath" -type f -exec chmod 600 {} \; 2>/dev/null
-            log_success "✓ $dirpath/ 및 하위 파일 권한 설정"
+            log_success "✓ $dirpath/ 및 하위 파일 권한 설정 (파일: 600)"
+        # /etc/systemd 하위 파일 권한 설정 (U-20)
+        elif [ "$dirpath" = "/etc/systemd" ]; then
+            # 하위 디렉토리는 750, 파일은 600
+            find "$dirpath" -type d -exec chmod 750 {} \; 2>/dev/null
+            find "$dirpath" -type f -exec chown root:root {} \; 2>/dev/null
+            find "$dirpath" -type f -exec chmod 600 {} \; 2>/dev/null
+            log_success "✓ $dirpath/ 권한 설정 (디렉토리: 750, 파일: 600)"
         else
             log_success "✓ $dirpath/: $owner:$group $perms"
         fi
