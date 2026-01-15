@@ -446,7 +446,7 @@ LG CNS - Cloud Platform Team
   sudo rm filename
   ```
 
-  ### U-28: 접근제어 설정 (TCP Wrapper/Firewall)
+### U-28: 접근제어 설정 (TCP Wrapper/Firewall)
 - **이유**: 허용할 IP 주소를 사전에 알 수 없음, 환경별로 방화벽 정책 상이
 - **적용 시점**: VM 배포 후 네트워크 정책 수립 시
 - **적용 방법**: 
