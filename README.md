@@ -504,3 +504,42 @@ LG CNS - Cloud Platform Team
   sudo rm -i /path/to/suspicious/file
   ```
 
+### U-59: SNMP v3 사용
+- **이유**: SNMP 서버로 사용하는 경우에만 적용, 사용자 생성 및 인증 설정 필요
+- **적용 시점**: VM을 SNMP 서버로 사용하는 경우
+- **적용 방법**: 
+  ```bash
+  # SNMP v3 사용자 생성
+  sudo net-snmp-create-v3-user -ro -A myauthpass -X myprivpass -a SHA -x AES myuser
+  
+  # /etc/snmp/snmpd.conf 편집
+  sudo vi /etc/snmp/snmpd.conf
+  # createUser myuser SHA myauthpass AES myprivpass
+  # rouser myuser
+  
+  sudo systemctl restart snmpd
+  ```
+
+### U-60: SNMP Community String 복잡성 설정
+- **이유**: SNMP 서버로 사용하는 경우에만 적용, Community String을 사전에 알 수 없음
+- **적용 시점**: VM을 SNMP 서버로 사용하는 경우
+- **적용 방법**: 
+  ```bash
+  sudo vi /etc/snmp/snmpd.conf
+  # rocommunity <복잡한문자열> default
+  # rwcommunity <복잡한문자열> default
+  
+  sudo systemctl restart snmpd
+  ```
+
+### U-61: SNMP 접근 제어 설정
+- **이유**: SNMP 서버로 사용하는 경우에만 적용, 허용 네트워크를 사전에 알 수 없음
+- **적용 시점**: VM을 SNMP 서버로 사용하는 경우
+- **적용 방법**: 
+  ```bash
+  sudo vi /etc/snmp/snmpd.conf
+  # rocommunity <String값> 192.168.1.0/24
+  # rwcommunity <String값> 192.168.1.0/24
+  
+  sudo systemctl restart snmpd
+  ```
