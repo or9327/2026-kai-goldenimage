@@ -27,6 +27,7 @@ fi
 
 # 일반적으로 허용되는 SUID/SGID 파일 (상대 경로 패턴)
 ALLOWED_SUID_FILES=(
+    # 기본 시스템 유틸리티
     "/usr/bin/sudo"
     "/usr/bin/su"
     "/usr/bin/passwd"
@@ -37,8 +38,24 @@ ALLOWED_SUID_FILES=(
     "/usr/bin/mount"
     "/usr/bin/umount"
     "/usr/bin/pkexec"
-    "/usr/sbin/unix_chkpwd"
+    
+    # 패스워드 관리 (passwd 패키지)
+    "/usr/bin/expiry"      # 패스워드 만료 정보 확인
+    "/usr/bin/chage"       # 패스워드 aging 관리
+    
+    # SSH 관련
+    "/usr/bin/ssh-agent"   # SSH 키 관리 에이전트
     "/usr/lib/openssh/ssh-keysign"
+    
+    # FUSE (선택적 - 환경에 따라)
+    "/usr/bin/fusermount3" # FUSE 파일시스템 마운트 (gcsfuse, sshfs 등)
+    "/usr/bin/fusermount"  # FUSE 구버전
+    
+    # PAM 인증
+    "/usr/sbin/unix_chkpwd"
+    "/usr/sbin/pam_extrausers_chkpwd" # PAM 추가 사용자 인증
+    
+    # D-Bus 및 PolicyKit
     "/usr/lib/dbus-1.0/dbus-daemon-launch-helper"
     "/usr/lib/policykit-1/polkit-agent-helper-1"
 )

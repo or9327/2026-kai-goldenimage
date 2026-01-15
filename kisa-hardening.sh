@@ -317,6 +317,10 @@ main() {
     # 헤더 출력
     print_header
     
+    # 결과 파일 초기화 (매 실행마다 새로 시작)
+    mkdir -p "${LOG_BASE_DIR}"
+    > "${LOG_BASE_DIR}/results.jsonl"
+    
     # 사전 점검
     pre_check
     

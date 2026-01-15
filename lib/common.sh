@@ -28,18 +28,42 @@ print_summary() {
     local duration=$1
     
     echo ""
-    echo "╔════════════════════════════════════════════════════════════════╗"
-    echo "║                         실행 요약                               ║"
-    echo "╚════════════════════════════════════════════════════════════════╝"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${GREEN}✓ KISA 보안 가이드 적용 완료${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "총 실행 시간: ${duration}초"
-    echo "성공한 모듈: ${MODULE_SUCCESS_COUNT:-0}"
-    echo "실패한 모듈: ${MODULE_FAIL_COUNT:-0}"
-    echo "건너뛴 모듈: ${MODULE_SKIP_COUNT:-0}"
+    
+    # 실행 결과 요약
+    local total_modules=$((MODULE_SUCCESS_COUNT + MODULE_FAIL_COUNT + MODULE_SKIP_COUNT))
+    echo -e "${BLUE} 실행 결과:${NC}"
+    echo -e "  ${GREEN}✓ 성공:${NC} ${MODULE_SUCCESS_COUNT:-0}"
+    if [ "${MODULE_FAIL_COUNT:-0}" -gt 0 ]; then
+        echo -e "  ${RED}✗ 실패:${NC} ${MODULE_FAIL_COUNT:-0}"
+    fi
+    if [ "${MODULE_SKIP_COUNT:-0}" -gt 0 ]; then
+        echo -e "  ${YELLOW}⊘ 건너뜀:${NC} ${MODULE_SKIP_COUNT:-0}"
+    fi
+    echo -e "  ${BLUE}⏱ 실행 시간:${NC} ${duration}초"
     echo ""
-    echo "백업 디렉토리: $BACKUP_DIR"
-    echo "로그 파일: $LOG_FILE"
-    echo "보고서: $REPORT_FILE"
+    
+    # 파일 위치
+    echo -e "${BLUE} 생성된 파일:${NC}"
+    if [ -d "$BACKUP_DIR" ] && [ "$(ls -A $BACKUP_DIR 2>/dev/null)" ]; then
+        echo -e "  ${CYAN}백업:${NC} $BACKUP_DIR"
+    fi
+    echo -e "  ${CYAN}로그:${NC} $LOG_FILE"
+    echo ""
+    
+    # 추가 안내
+    if [ "${MODULE_FAIL_COUNT:-0}" -gt 0 ]; then
+        echo -e "${YELLOW}⚠ 실패한 모듈이 있습니다. 로그를 확인하세요:${NC}"
+        echo "  ./scripts/view-logs.sh -e"
+        echo ""
+    fi
+    
+    echo -e "${BLUE} 도움말:${NC}"
+    echo "  로그 확인: ./scripts/view-logs.sh"
+    echo "  진행률 확인: ./scripts/check-progress.sh"
     echo ""
 }
 
@@ -114,9 +138,6 @@ get_category_title() {
             ;;
         "05-log-management")
             echo "로그 관리"
-            ;;
-        "06-network-security")
-            echo "네트워크 보안"
             ;;
         *)
             echo "알 수 없음"
