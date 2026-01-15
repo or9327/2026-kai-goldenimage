@@ -12,8 +12,8 @@ source "${ROOT_DIR}/lib/logging.sh"
 source "${ROOT_DIR}/lib/backup.sh"
 
 # 모듈 정보
-MODULE_ID="U-46"
-MODULE_NAME="메일 서비스 스팸 방지"
+MODULE_ID="U-46-48"
+MODULE_NAME="메일 서비스 스팸 방지 (U-46, U-48)"
 MODULE_CATEGORY="서비스 관리"
 MODULE_SEVERITY="중"
 
@@ -123,15 +123,30 @@ apply_hardening() {
     
     # Step 3: Sendmail - PrivacyOptions 설정
     if [ -f /etc/mail/sendmail.cf ]; then
-        log_info "Step 3: Sendmail PrivacyOptions 설정"
+        log_info "Step 3: Sendmail PrivacyOptions 설정 (U-46, U-48)"
         
         # 기존 PrivacyOptions 확인
         if grep -q "^O PrivacyOptions=" /etc/mail/sendmail.cf; then
-            # restrictqrun이 없으면 추가
-            if ! grep -q "^O PrivacyOptions=.*restrictqrun" /etc/mail/sendmail.cf; then
-                # 기존 옵션에 restrictqrun 추가
-                sed -i 's/^\(O PrivacyOptions=.*\)$/\1, restrictqrun/' /etc/mail/sendmail.cf
-                log_success "✓ PrivacyOptions에 restrictqrun 추가"
+            local current_options=$(grep "^O PrivacyOptions=" /etc/mail/sendmail.cf | cut -d= -f2)
+            local needs_update=false
+            
+            # U-46: restrictqrun 확인
+            if ! echo "$current_options" | grep -q "restrictqrun"; then
+                needs_update=true
+            fi
+            
+            # U-48: novrfy, noexpn 확인
+            if ! echo "$current_options" | grep -q "novrfy"; then
+                needs_update=true
+            fi
+            if ! echo "$current_options" | grep -q "noexpn"; then
+                needs_update=true
+            fi
+            
+            if [ "$needs_update" = true ]; then
+                # 전체 옵션 설정
+                sed -i 's/^O PrivacyOptions=.*/O PrivacyOptions=authwarnings, novrfy, noexpn, restrictqrun/' /etc/mail/sendmail.cf
+                log_success "✓ PrivacyOptions 업데이트 (U-46, U-48)"
                 changes_made=true
                 
                 # Sendmail 서비스 재시작
@@ -143,7 +158,7 @@ apply_hardening() {
         else
             # PrivacyOptions가 없으면 추가
             echo "O PrivacyOptions=authwarnings, novrfy, noexpn, restrictqrun" >> /etc/mail/sendmail.cf
-            log_success "✓ PrivacyOptions 설정 추가"
+            log_success "✓ PrivacyOptions 설정 추가 (U-46, U-48)"
             changes_made=true
             
             # Sendmail 서비스 재시작
@@ -153,6 +168,74 @@ apply_hardening() {
             fi
         fi
     fi
+    
+    # Step 4: Postfix - disable_vrfy_command 설정 (U-48)
+    if [ -f /etc/postfix/main.cf ]; then
+        log_info "Step 4: Postfix vrfy 명령 비활성화 (U-48)"
+        
+        if ! grep -q "^disable_vrfy_command" /etc/postfix/main.cf; then
+            echo "" >> /etc/postfix/main.cf
+            echo "# KISA U-48: Disable VRFY command" >> /etc/postfix/main.cf
+            echo "disable_vrfy_command = yes" >> /etc/postfix/main.cf
+            log_success "✓ disable_vrfy_command = yes"
+            changes_made=true
+            
+            # Postfix 재시작
+            if systemctl is-active --quiet postfix 2>/dev/null; then
+                postfix reload 2>/dev/null
+                log_success "✓ Postfix 설정 다시 로드"
+            fi
+        else
+            # 기존 설정 확인
+            if grep -q "^disable_vrfy_command.*yes" /etc/postfix/main.cf; then
+                log_success "✓ disable_vrfy_command 이미 설정됨"
+            else
+                sed -i 's/^disable_vrfy_command.*/disable_vrfy_command = yes/' /etc/postfix/main.cf
+                log_success "✓ disable_vrfy_command = yes로 변경"
+                changes_made=true
+                
+                if systemctl is-active --quiet postfix 2>/dev/null; then
+                    postfix reload 2>/dev/null
+                    log_success "✓ Postfix 설정 다시 로드"
+                fi
+            fi
+        fi
+    fi
+    
+    # Step 5: Exim - vrfy/expn ACL 제거 (U-48)
+    for exim_conf in /etc/exim/exim.conf /etc/exim4/exim4.conf.template; do
+        if [ -f "$exim_conf" ]; then
+            log_info "Step 5: Exim vrfy/expn ACL 제거 (U-48)"
+            
+            local exim_changed=false
+            
+            # acl_smtp_vrfy 주석 처리
+            if grep -q "^acl_smtp_vrfy" "$exim_conf"; then
+                sed -i 's/^acl_smtp_vrfy/#acl_smtp_vrfy/' "$exim_conf"
+                log_success "✓ acl_smtp_vrfy 비활성화"
+                exim_changed=true
+            fi
+            
+            # acl_smtp_expn 주석 처리
+            if grep -q "^acl_smtp_expn" "$exim_conf"; then
+                sed -i 's/^acl_smtp_expn/#acl_smtp_expn/' "$exim_conf"
+                log_success "✓ acl_smtp_expn 비활성화"
+                exim_changed=true
+            fi
+            
+            if [ "$exim_changed" = true ]; then
+                changes_made=true
+                
+                # Exim 재시작
+                if systemctl is-active --quiet exim4 2>/dev/null; then
+                    systemctl restart exim4 2>/dev/null
+                    log_success "✓ Exim 서비스 재시작"
+                fi
+            fi
+            
+            break
+        fi
+    done
     
     if [ "$changes_made" = false ]; then
         log_info "변경할 설정이 없습니다"
@@ -195,10 +278,29 @@ validate_settings() {
     
     # Sendmail 검증
     if [ -f /etc/mail/sendmail.cf ]; then
-        if grep -q "^O PrivacyOptions=.*restrictqrun" /etc/mail/sendmail.cf; then
-            log_success "✓ Sendmail: PrivacyOptions restrictqrun 설정됨"
+        local privopt=$(grep "^O PrivacyOptions=" /etc/mail/sendmail.cf | cut -d= -f2)
+        
+        if echo "$privopt" | grep -q "restrictqrun"; then
+            log_success "✓ Sendmail: restrictqrun 설정됨 (U-46)"
         else
-            log_error "✗ Sendmail: PrivacyOptions restrictqrun 미설정"
+            log_error "✗ Sendmail: restrictqrun 미설정 (U-46)"
+            validation_failed=true
+        fi
+        
+        if echo "$privopt" | grep -q "novrfy" && echo "$privopt" | grep -q "noexpn"; then
+            log_success "✓ Sendmail: novrfy, noexpn 설정됨 (U-48)"
+        else
+            log_error "✗ Sendmail: novrfy, noexpn 미설정 (U-48)"
+            validation_failed=true
+        fi
+    fi
+    
+    # Postfix 검증 (U-48)
+    if [ -f /etc/postfix/main.cf ]; then
+        if grep -q "^disable_vrfy_command.*yes" /etc/postfix/main.cf; then
+            log_success "✓ Postfix: disable_vrfy_command = yes (U-48)"
+        else
+            log_error "✗ Postfix: disable_vrfy_command 미설정 (U-48)"
             validation_failed=true
         fi
     fi

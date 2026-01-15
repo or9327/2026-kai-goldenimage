@@ -503,3 +503,4 @@ LG CNS - Cloud Platform Team
   # 의심스러운 파일 확인 및 삭제
   sudo rm -i /path/to/suspicious/file
   ```
+
